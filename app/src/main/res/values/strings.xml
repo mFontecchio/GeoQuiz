@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">GeoQuiz</string>
-    <string name="question_australia">Canberra is the capital of Autralia.</string>
+    <string name="question_australia">Canberra is the capital of Australia.</string>
     <string name="question_oceans">The Pacific Ocean is larger than the Atlantic Ocean.</string>
     <string name="question_mideast">The Sues Canal connects the Red Sea
         and the Indian Ocean.</string>
@@ -12,8 +12,13 @@
     <string name="true_button">True</string>
     <string name ="false_button">False</string>
     <string name="prev_button">Prev</string>
+    <string name="prev_button_descr">Previous Button</string>
     <string name="next_button">Next</string>
+    <string name="next_button_descr">Previous Button</string>
     <string name="correct_toast">Correct!</string>
     <string name="incorrect_toast">Incorrect!</string>
     <string name="answered_question">This question has already been answered.</string>
+    <string name="beginning_question">You\'ve reached the first question!</string>
+    <string name="unanswered_questions">You have unanswered questions!</string>
+    <string name="quiz_score">Your score is:</string>
 </resources>

@@ -30,20 +30,21 @@
 
     </LinearLayout>
 
+    <!--Lint Recommends using  gravity start/end vs right left to accomodate right>left reading languages-->
         <ImageButton
             android:id="@+id/prev_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|left"
+            android:layout_gravity="bottom|start"
             android:src="@drawable/arrow_left"
-            android:contentDescription="Previous Button" />
+            android:contentDescription="@+id/prev_button_descr" />
 
         <ImageButton
             android:id="@+id/next_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
+            android:layout_gravity="bottom|end"
             android:src="@drawable/arrow_right"
-            android:contentDescription="Next Button" />
+            android:contentDescription="@+id/next_button_descr" />
 
 </FrameLayout>

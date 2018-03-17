@@ -1,4 +1,4 @@
-package com.bignerdeanch.android.geoquiz;
+package com.bignerdranch.android.geoquiz;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,7 +10,23 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static java.lang.String.valueOf;
+import java.util.ArrayList;
+
+/**
+ * Chapter 1 Challenges:
+ * Customize the Toast                  X
+ * Chapter 2 Challenges:
+ * Add a Listener to the TextView       X
+ * Add a Previous Button                X
+ * From Button to ImageButton           X
+ * Chapter 3 Challenges:
+ * Preventing Repeat Answers            X
+ * Grading Quiz                         X
+ * Chapter 4 Challenges
+ * Exploring the Layout Inspector       X
+ * Exploring the Allocation Tracking    X
+ **/
+
 
 public class QuizActivity extends AppCompatActivity {
 
@@ -33,8 +49,9 @@ public class QuizActivity extends AppCompatActivity {
     };
 
     private int mCurrentIndex = 0;
-    //Initialize questionHistory with a value that is impossible for array Index to fill.
-    private int questionHistory = -1;
+    //Store answered question indexes to list for testing and disabling answer buttons.
+    private ArrayList<Integer> answerHistory = new ArrayList<>();
+    //Counter for the amount of correct answers.
     private int correctAnswers;
 
 
@@ -44,10 +61,16 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_quiz);
 
+        //Save state of application on rotation or onPause/onResume. State will remain uintil
+        //back button is used or application is killed by user.
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
         }
 
+        /*
+        Clicking the question text will advance to the next question.
+        Chapter 2 Challenge: Add a Listener to the TextView
+         */
         mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,6 +96,9 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
+        /*
+        Chapter 2 Challenge: Add a Previous Button.
+        */
         mPrevButton = (ImageButton) findViewById(R.id.prev_button);
         mPrevButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,24 +106,40 @@ public class QuizActivity extends AppCompatActivity {
                 mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
                 //Ensure we do not get index out of bounds errors when cycling.
                 if (mCurrentIndex < 0 ) {
-                    mCurrentIndex = mQuestionBank.length - 1;
+                    Toast.makeText(QuizActivity.this, R.string.beginning_question, Toast.LENGTH_SHORT).show();
+                    mCurrentIndex = 0;
+                    mPrevButton.setEnabled(false);
+                } else {
+                    updateQuestion();
+                    hasBeenAnswered();
+                    mNextButton.setEnabled(true);
                 }
-                updateQuestion();
             }
         });
 
+        /*
+        Chapter 2 Challenge: From Button to ImageButton.
+        Converted previous/next buttons to ImageButtons.
+         */
         mNextButton = (ImageButton) findViewById(R.id.next_button);
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
-                if (mCurrentIndex == 0){
-                    scoreQuiz();
-                    updateQuestion();
+                //Stop next cycle once we reach the end of the questionBank array.
+                if(mCurrentIndex == 0){
+                    mCurrentIndex = mQuestionBank.length - 1;
+                    mNextButton.setEnabled(false);
+                    //If we reach the end without answering all questions inform the user they have
+                    //unanswered questions.
+                    if(answerHistory.size() != mQuestionBank.length){
+                        Toast.makeText(QuizActivity.this, R.string.unanswered_questions, Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     updateQuestion();
+                    hasBeenAnswered();
+                    mPrevButton.setEnabled(true);
                 }
-
             }
         });
 
@@ -107,8 +149,6 @@ public class QuizActivity extends AppCompatActivity {
     private void updateQuestion() {
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
-        mTrueButton.setEnabled(true);
-        mFalseButton.setEnabled(true);
     }
 
     private void checkAnswer(boolean userPressedTrue) {
@@ -116,26 +156,62 @@ public class QuizActivity extends AppCompatActivity {
 
         int messageResID = 0;
 
-        if (questionHistory < mCurrentIndex) {
-            if (userPressedTrue == answerIsTrue) {
-                messageResID = R.string.correct_toast;
-                correctAnswers ++;
-            } else {
-                messageResID = R.string.incorrect_toast;
-            }
-            Toast.makeText(this, messageResID, Toast.LENGTH_SHORT).show();
-            mTrueButton.setEnabled(false);
-            mFalseButton.setEnabled(false);
+        //Depending on the answer chosen select the correct string to display & add 1 to correctAnswers
+        //counter if the answer was correct. This is used to calculate the users score.
+        if (userPressedTrue == answerIsTrue) {
+            messageResID = R.string.correct_toast;
+            correctAnswers ++;
         } else {
-            Toast.makeText(this, R.string.answered_question, Toast.LENGTH_SHORT).show();
+            messageResID = R.string.incorrect_toast;
         }
-        questionHistory = mCurrentIndex;
+
+        /*
+        Display 'Correct' or 'Incorrect' to the user witha  toast.
+        Challenge 1: Customize Toast. Set toast location to TOP using
+        Toast.setGravity.
+        */
+        Toast answerToast = Toast.makeText(this, messageResID, Toast.LENGTH_SHORT);
+        answerToast.setGravity(Gravity.TOP, 0,250);
+        answerToast.show();
+
+        //Immediate effect of disabling buttons.
+        toggleTFButtons(false);
+
+        answerHistory.add(mCurrentIndex);
+
+        if (answerHistory.size() == mQuestionBank.length) {
+            scoreQuiz();
+        }
     }
 
-    private void scoreQuiz() {
-        float gradeTotal = ((float)correctAnswers / mQuestionBank.length) * 100;
-        Toast.makeText(this, String.format("Your score is: %3.2f ", gradeTotal), Toast.LENGTH_LONG).show();
+    /*
+    Chapter 3 Challenge: Preventing Repeat Answers.
+     */
+    private void hasBeenAnswered() {
+        //Test if the current question has been answered already, if so Disable answer buttons
+        //If not enable answer buttons.
+        if (answerHistory.contains(mCurrentIndex)){
+            toggleTFButtons(false);
+        } else {
+            toggleTFButtons(true);
+        }
     }
+
+    /*
+    Chapter 3 Challenge: Grading Quiz
+     */
+    private void scoreQuiz() {
+        //Calculate the grade of the quiz once complete and display it in a Toast for the user.
+        float gradeTotal = ((float)correctAnswers / mQuestionBank.length) * 100;
+        Toast.makeText(this, String.format(getString(R.string.quiz_score) + " %.2f%%", gradeTotal), Toast.LENGTH_LONG).show();
+    }
+
+    //Simple method to enable disable answer buttons as needed by passing boolean.
+    private void toggleTFButtons(boolean state){
+        mTrueButton.setEnabled(state);
+        mFalseButton.setEnabled(state);
+    }
+
 
     @Override
     public void onStart() {

@@ -1,7 +1,7 @@
-package com.bignerdeanch.android.geoquiz;
+package com.bignerdranch.android.geoquiz;
 
 /**
- * Created by Hayami on 3/12/2018.
+ * Created by MFontecchio on 3/12/2018.
  */
 
 public class Question {
